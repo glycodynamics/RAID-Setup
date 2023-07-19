@@ -506,26 +506,138 @@ sdi
 Also, possibly check cat /proc/partitions
 
 3. Clear gpt label and partition on sdf and sdi:
+
 ```
-dd if=/dev/zero of=/dev/sdf bs=512 count=34
+ccbrc@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdf bs=512 count=34
+[sudo] password for ccbrc: 
 34+0 records in
 34+0 records out
-17408 bytes (17 kB, 17 KiB) copied, 0.0426989 s, 408 kB/s
+17408 bytes (17 kB, 17 KiB) copied, 1.00613 s, 17.3 kB/s
 
-dd if=/dev/zero of=/dev/sdi bs=512 count=34
-34+0 records in
-34+0 records out
-17408 bytes (17 kB, 17 KiB) copied, 0.0367204 s, 474 kB/s
 
-dd if=/dev/zero of=/dev/sdf bs=512 count=34 seek=$((`blockdev --getsz /dev/sdf` - 34))
+ccbrc@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdi bs=512 count=34
 34+0 records in
 34+0 records out
-17408 bytes (17 kB, 17 KiB) copied, 0.0363717 s, 479 kB/s
+17408 bytes (17 kB, 17 KiB) copied, 1.02758 s, 16.9 kB/s
 
-dd if=/dev/zero of=/dev/sdi bs=512 count=34 seek=$((`blockdev --getsz /dev/sdi` - 34))
+ccbrc@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdf bs=512 count=34 seek=$((`sudo blockdev --getsz /dev/sdf` - 34))
 34+0 records in
 34+0 records out
-17408 bytes (17 kB, 17 KiB) copied, 0.0376497 s, 462 kB/s
+17408 bytes (17 kB, 17 KiB) copied, 0.00206208 s, 8.4 MB/s
+
+ccbrc@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdi bs=512 count=34 seek=$((`sudo blockdev --getsz /dev/sdi` - 34))
+34+0 records in
+34+0 records out
+17408 bytes (17 kB, 17 KiB) copied, 0.00205267 s, 8.5 MB/s
+
+ccbrc@gag:/scratch$ lsblk --fs
+NAME    FSTYPE            LABEL                 UUID                                 FSAVAIL FSUSE% MOUNTPOINT
+loop0   squashfs                                                                           0   100% /snap/bare/5
+loop1   squashfs                                                                           0   100% /snap/chromium/2497
+loop2   squashfs                                                                           0   100% /snap/core18/2751
+loop3   squashfs                                                                           0   100% /snap/lxd/25086
+loop4   squashfs                                                                           0   100% /snap/lxd/25112
+loop5   squashfs                                                                           0   100% /snap/chromium/2529
+loop6   squashfs                                                                           0   100% /snap/core18/2785
+loop7   squashfs                                                                           0   100% /snap/core20/1974
+loop8   squashfs                                                                           0   100% /snap/core22/806
+loop9   squashfs                                                                           0   100% /snap/gnome-42-2204/111
+loop10  squashfs                                                                           0   100% /snap/gnome-3-38-2004/143
+loop11  squashfs                                                                           0   100% /snap/gtk-common-themes/1535
+loop12  squashfs                                                                           0   100% /snap/snapd/19361
+loop13  squashfs                                                                           0   100% /snap/gnome-42-2204/120
+loop14  squashfs                                                                           0   100% /snap/core20/1950
+loop15  squashfs                                                                           0   100% /snap/cups/980
+loop16  squashfs                                                                           0   100% /snap/gtk-common-themes/1534
+loop17  squashfs                                                                           0   100% /snap/snapd/19457
+loop18  squashfs                                                                           0   100% /snap/cups/974
+loop19  squashfs                                                                           0   100% /snap/core22/817
+loop20  squashfs                                                                           0   100% /snap/gnome-3-38-2004/140
+sda                                                                                                 
+└─sda1  linux_raid_member gag.olemiss.edu:0     345d1e57-859a-84ab-5aa7-e5ee062c3828                
+  └─md0 xfs                                     4b857035-2469-4ba9-9c83-960125cd75ed   28.9T     1% /scratch
+sdb                                                                                                 
+└─sdb1  linux_raid_member gag.olemiss.edu:0     345d1e57-859a-84ab-5aa7-e5ee062c3828                
+  └─md0 xfs                                     4b857035-2469-4ba9-9c83-960125cd75ed   28.9T     1% /scratch
+sdc                                                                                                 
+└─sdc1  linux_raid_member gag.olemiss.edu:0     345d1e57-859a-84ab-5aa7-e5ee062c3828                
+  └─md0 xfs                                     4b857035-2469-4ba9-9c83-960125cd75ed   28.9T     1% /scratch
+sdd                                                                                                 
+sde                                                                                                 
+├─sde1                                                                                              
+├─sde2  ext4                                    a24f589a-8113-4e31-bc00-bad36d8271fa  581.9M    33% /boot
+├─sde3  swap                                    af84dd67-c733-4e45-a2b3-df63a5a83ede                [SWAP]
+└─sde4  ext4                                    72c80aee-79b6-4070-8f0b-2eef4421ff0c    2.8T    16% /
+sdf                                                                                                 
+sdg     linux_raid_member ccbrc.olemiss.edu:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
+sdh     linux_raid_member ccbrc.olemiss.edu:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
+sdi                                                                                                 
+
+
+ccbrc@gag:/scratch$ sudo mdadm -S /dev/md127
+mdadm: stopped /dev/md127
+
+
+ccbrc@gag:/scratch$ lsblk --fs
+NAME    FSTYPE            LABEL             UUID                                 FSAVAIL FSUSE% MOUNTPOINT
+loop0   squashfs                                                                       0   100% /snap/bare/5
+loop1   squashfs                                                                       0   100% /snap/chromium/2497
+loop2   squashfs                                                                       0   100% /snap/core18/2751
+loop3   squashfs                                                                       0   100% /snap/lxd/25086
+loop4   squashfs                                                                       0   100% /snap/lxd/25112
+loop5   squashfs                                                                       0   100% /snap/chromium/2529
+loop6   squashfs                                                                       0   100% /snap/core18/2785
+loop7   squashfs                                                                       0   100% /snap/core20/1974
+loop8   squashfs                                                                       0   100% /snap/core22/806
+loop9   squashfs                                                                       0   100% /snap/gnome-42-2204/111
+loop10  squashfs                                                                       0   100% /snap/gnome-3-38-2004/143
+loop11  squashfs                                                                       0   100% /snap/gtk-common-themes/1535
+loop12  squashfs                                                                       0   100% /snap/snapd/19361
+loop13  squashfs                                                                       0   100% /snap/gnome-42-2204/120
+loop14  squashfs                                                                       0   100% /snap/core20/1950
+loop15  squashfs                                                                       0   100% /snap/cups/980
+loop16  squashfs                                                                       0   100% /snap/gtk-common-themes/1534
+loop17  squashfs                                                                       0   100% /snap/snapd/19457
+loop18  squashfs                                                                       0   100% /snap/cups/974
+loop19  squashfs                                                                       0   100% /snap/core22/817
+loop20  squashfs                                                                       0   100% /snap/gnome-3-38-2004/140
+sda                                                                                             
+└─sda1  linux_raid_member gag.olemiss.edu:0 345d1e57-859a-84ab-5aa7-e5ee062c3828                
+  └─md0 xfs                                 4b857035-2469-4ba9-9c83-960125cd75ed   28.9T     1% /scratch
+sdb                                                                                             
+└─sdb1  linux_raid_member gag.olemiss.edu:0 345d1e57-859a-84ab-5aa7-e5ee062c3828                
+  └─md0 xfs                                 4b857035-2469-4ba9-9c83-960125cd75ed   28.9T     1% /scratch
+sdc                                                                                             
+└─sdc1  linux_raid_member gag.olemiss.edu:0 345d1e57-859a-84ab-5aa7-e5ee062c3828                
+  └─md0 xfs                                 4b857035-2469-4ba9-9c83-960125cd75ed   28.9T     1% /scratch
+sdd                                                                                             
+sde                                                                                             
+├─sde1                                                                                          
+├─sde2  ext4                                a24f589a-8113-4e31-bc00-bad36d8271fa  581.9M    33% /boot
+├─sde3  swap                                af84dd67-c733-4e45-a2b3-df63a5a83ede                [SWAP]
+└─sde4  ext4                                72c80aee-79b6-4070-8f0b-2eef4421ff0c    2.8T    16% /
+sdf                                                                                             
+sdg                                                                                             
+sdh                                                                                             
+sdi                                                                                       
+
+
+ccbrc@gag:/scratch$ sudo mdadm --create --verbose /dev/md127 --level=5  --raid-devices=4 /dev/sdf /dev/sdg /dev/sdh /dev/sdi
+mdadm: layout defaults to left-symmetric
+mdadm: layout defaults to left-symmetric
+mdadm: chunk size defaults to 512K
+mdadm: partition table exists on /dev/sdg
+mdadm: partition table exists on /dev/sdg but will be lost or
+       meaningless after creating array
+mdadm: partition table exists on /dev/sdh
+mdadm: partition table exists on /dev/sdh but will be lost or
+       meaningless after creating array
+mdadm: size set to 13672250368K
+mdadm: automatically enabling write-intent bitmap on large array
+Continue creating array? no
+mdadm: create aborted.
+
+
 ```
 4. Check again using lsblk --fs and/or cat /proc/partitions. If the sdb1 and sdd1 are not gone then you need to reboot at this point or make the OS rescan until /proc/partitions is correct.
 
