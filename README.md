@@ -193,8 +193,6 @@ mdadm --detail --scan >> /etc/mdadm/mdadm.conf
 
 #### 7. Mount the filesystem
 
-
-```
 Check the UUID of md0 attay:
 ccbrc@gag:/scratch$ lsblk -o NAME,UUID
 NAME    UUID                                 MOUNTPOINT
@@ -221,17 +219,22 @@ Filesystem      Size  Used Avail Use% Mounted on
 /dev/md0         32T  224G   32T   1% /scratch
 ```
 All set! The usrquota,grpquota keywords are needed only when you want to enable user quota or disk quote on the system. Reboot the machine once to sure everything starts itself, and the raid is visible.
-```
+
+####  Time for running as shots as the troubleshooting (which I really wish you dont have to do ever!) needs a strong heart when there is data on disks. 
+
+
+### Troubleshooting 
 
 ### Stopping and Running RAID:
 
 Stopping a running RAID device is easy:
 
-``
+```
 ccbrc@gag:~$ sudo mdadm --stop /dev/md0
 mdadm: stopped /dev/md0
-``
-Running is complicated and ```mdadm --run /dev/md0``` will not work. Do either:
+```
+Running is complicated and ```mdadm --run /dev/md0``` will NOT work. Do instead:
+
 ```
 ccbrc@gag:~$ sudo mdadm --assemble --scan 
 mdadm: /dev/md0 has been started with 3 drives.
