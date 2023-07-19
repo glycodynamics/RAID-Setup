@@ -162,11 +162,21 @@ sde
 Have a look in /proc/mdstat. You should see that the array is ready, and running. It will show one U for each drive, UUU in our case here.
 #### 5. Create an XFS Filesystem
 ```
-mkfs.xfs /dev/md0
+ccbrc@gag:$ sudo mkfs.xfs /dev/md0
+meta-data=/dev/md0               isize=512    agcount=32, agsize=244152192 blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1
+data     =                       bsize=4096   blocks=7812870144, imaxpct=5
+         =                       sunit=128    swidth=256 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=521728, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 ```
 If the information is incorrect, specify stripe geometry manually with the su and sw parameters of the -d option. The su parameter specifies the RAID chunk size, and the sw parameter specifies the number of data disks in the RAID device.
 
-#### 6. Save your Create filesystem and mount point
+#### 6. Save your created filesystem and mount point
 After the array is ready, it is important to save the configuration in the proper mdadm configuration file. In Ubuntu, this is file /etc/mdadm/mdadm.conf. In some other distributions, this is file can be in /etc/mdadm.conf. Check your distribution's documentation, or look at man mdadm.conf, to see what applies to your distribution.
 
 ```
@@ -178,8 +188,58 @@ ARRAY /dev/md0 metadata=1.2 spares=1 name=gag.olemiss.edu:0 UUID=345d1e57:859a84
 ## Write to mdadm.conf
 
 mdadm --detail --scan >> /etc/mdadm/mdadm.conf
+## 
+
+
+#### 7. Mount the filesystem
+
+
+```
+Check the UUID of md0 attay:
+ccbrc@gag:/scratch$ lsblk -o NAME,UUID
+NAME    UUID                                 MOUNTPOINT
+sda                                          
+└─sda1  345d1e57-859a-84ab-5aa7-e5ee062c3828 
+  └─md0 4b857035-2469-4ba9-9c83-960125cd75ed
+sdb                                          
+└─sdb1  345d1e57-859a-84ab-5aa7-e5ee062c3828 
+  └─md0 4b857035-2469-4ba9-9c83-960125cd75ed
+sdc                                          
+└─sdc1  345d1e57-859a-84ab-5aa7-e5ee062c3828 
+  └─md0 4b857035-2469-4ba9-9c83-960125cd75ed
+
+put the raid array UUID and mount point in /etc/fstab:
+
+# RAID5 /dev/md0 on sda1, sdb1 and sdc1
+UUID=4b857035-2469-4ba9-9c83-960125cd75ed /scratch                 xfs     defaults,usrquota,grpquota        1 2
+
+#Then do:
+ccbrc@gag:~$ sudo mount /scratch
+
+ccbrc@gag:~$ sudo df -H
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md0         32T  224G   32T   1% /scratch
+```
+All set! The usrquota,grpquota keywords are needed only when you want to enable user quota or disk quote on the system. Reboot the machine once to sure everything starts itself, and the raid is visible.
 ```
 
+### Stopping and Running RAID:
+
+Stopping a running RAID device is easy:
+
+``
+ccbrc@gag:~$ sudo mdadm --stop /dev/md0
+mdadm: stopped /dev/md0
+``
+Running is complicated and ```mdadm --run /dev/md0``` will not work. Do either:
+```
+ccbrc@gag:~$ sudo mdadm --assemble --scan 
+mdadm: /dev/md0 has been started with 3 drives.
+
+or
+
+mdadm --assemble /dev/md0 /dev/sda1 /dev/sdb1 /dev/sdc1
+```
 
 ### RAID Recovery
 
