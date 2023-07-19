@@ -91,12 +91,12 @@ We will be creating RAID5 on this example. Execute the command:
 # creating RAID 5 on three rives:
 sudo mdadm --create --verbose /dev/md0 --level=5 --raid-devices=3 /dev/sda1 /dev/sdb1 /dev/sdc1
 
-# Creating RAID5 on three drives but adding a spare drive (lest say you have partitioned sdd to be used as spare drive if one fails. Spare drive will be used automatically to rebuild the array once a disk fails.
+# Creating RAID5 on three drives but adding a spare drive (lest say you have partitioned sdd to be used as a spare drive if one fails. The spare drive will be used automatically to rebuild the array once a disk fails.
 mdadm --create --verbose /dev/md0 --level=5 --raid-devices=3 /dev/sdb1 /dev/sdc1 /dev/sdd1 --spare-devices=1 /dev/sdd1
 ```
-This command creates a RAID 5 array called /dev/md0 using disks sda, sdb, and sdc. The later command with ```--spare-devices``` . Adjust the command based on the desired RAID device name and the number and names of your disks. Wait for the command to complete. The process may take some time depending on the size of the disks.
+This command creates a RAID 5 array called /dev/md0 using disks sda, sdb, and sdc. The later command with ```--spare-devices``` . Adjust the command based on the desired RAID device name and the number and names of your disks. Wait for the command to complete. The process may take some time, depending on the size of the disks.
 
-At this point disks will be totally crazy and start working in full capacity to reconstruct of your array. Have a look in /proc/mdstat to see what's going on.
+At this point, disks will be totally crazy and start working at full capacity to reconstruct your array. Have a look in /proc/mdstat to see what's going on.
 
 ```
 ccbrc@gag:/home/sushil$ cat /proc/mdstat 
@@ -118,9 +118,21 @@ md0 : active raid5 sdc1[3] sdb1[1] sda1[0]
       bitmap: 0/117 pages [0KB], 65536KB chunk
 
 unused devices: <none>
+```
+#### NOTE: HAVE PATIENCE AND WAIT FOR A DAY OR TWO UNTIL THIS STEP IS COMPLETE
 
 ```
-HAVE PATIENCE AND WAIT FOR A DAY OR TWO UNTIL THIS STEP IS COMPLETE
+### After 30 hours:
+ccbrc@gag:/$ cat /proc/mdstat 
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md0 : active raid5 sdc1[3] sdb1[1] sda1[0]
+      31251490816 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+      bitmap: 0/117 pages [0KB], 65536KB chunk
+
+unused devices: <none>
+```
+
+
 Remember, patience is a key virtue when it comes to RAID recovery, and taking necessary precautions will safeguard your data.
 During the process of setting up RAID, one crucial aspect often overlooked is the recovery phase. It is of utmost importance to exercise patience and refrain from rebooting the machine or making any changes to the drives while the recovery is in progress. Interrupting the recovery process can lead to data corruption or failure in rebuilding the RAID array.
 
@@ -148,8 +160,13 @@ sde
 ```
 
 Have a look in /proc/mdstat. You should see that the array is ready, and running. It will show one U for each drive, UUU in our case here.
+#### 5. Create an XFS Filesystem
+```
+mkfs.xfs /dev/md0
+```
+If the information is incorrect, specify stripe geometry manually with the su and sw parameters of the -d option. The su parameter specifies the RAID chunk size, and the sw parameter specifies the number of data disks in the RAID device.
 
-#### 5. Save your Create filesystem and mount point
+#### 6. Save your Create filesystem and mount point
 After the array is ready, it is important to save the configuration in the proper mdadm configuration file. In Ubuntu, this is file /etc/mdadm/mdadm.conf. In some other distributions, this is file can be in /etc/mdadm.conf. Check your distribution's documentation, or look at man mdadm.conf, to see what applies to your distribution.
 
 ```
@@ -403,7 +420,7 @@ Now it's clear that It looks like the partition table was changed on sdf and sdi
 
 ### Fix
 
-1. Comment out /data in fstab so it will not be fs checked or mounted during boot automatically.
+1. Comment out /data in fstab so it will not automatically be fs checked or mounted during boot.
 
 2. Check the current state: lsblk --fs
 ```
@@ -423,25 +440,26 @@ sdi
    ```
 3. Shows sdg and sdh as raid members. If you see a file system detected on sdf1 or sdi1, this will likely not work or be considerably more likely to run into trouble.
 
-```
-
 Also, possibly check cat /proc/partitions
 
 3. Clear gpt label and partition on sdf and sdi:
 ```
-# dd if=/dev/zero of=/dev/sdf bs=512 count=34
+dd if=/dev/zero of=/dev/sdf bs=512 count=34
 34+0 records in
 34+0 records out
 17408 bytes (17 kB, 17 KiB) copied, 0.0426989 s, 408 kB/s
-# dd if=/dev/zero of=/dev/sdi bs=512 count=34
+
+dd if=/dev/zero of=/dev/sdi bs=512 count=34
 34+0 records in
 34+0 records out
 17408 bytes (17 kB, 17 KiB) copied, 0.0367204 s, 474 kB/s
-# dd if=/dev/zero of=/dev/sdf bs=512 count=34 seek=$((`blockdev --getsz /dev/sdf` - 34))
+
+dd if=/dev/zero of=/dev/sdf bs=512 count=34 seek=$((`blockdev --getsz /dev/sdf` - 34))
 34+0 records in
 34+0 records out
 17408 bytes (17 kB, 17 KiB) copied, 0.0363717 s, 479 kB/s
-# dd if=/dev/zero of=/dev/sdi bs=512 count=34 seek=$((`blockdev --getsz /dev/sdi` - 34))
+
+dd if=/dev/zero of=/dev/sdi bs=512 count=34 seek=$((`blockdev --getsz /dev/sdi` - 34))
 34+0 records in
 34+0 records out
 17408 bytes (17 kB, 17 KiB) copied, 0.0376497 s, 462 kB/s
