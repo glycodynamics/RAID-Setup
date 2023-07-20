@@ -636,9 +636,10 @@ mdadm: size set to 13672250368K
 mdadm: automatically enabling write-intent bitmap on large array
 Continue creating array? no
 mdadm: create aborted.
-
-
 ```
+If successful, this is indeed encouraging. 
+
+
 4. Check again using lsblk --fs and/or cat /proc/partitions. If the sdb1 and sdd1 are not gone then you need to reboot at this point or make the OS rescan until /proc/partitions is correct.
 
 5. Stop
@@ -655,10 +656,47 @@ mdadm --zero-superblock /dev/sdh
 6. Create with same structure using whole disk
 
 ```
-mdadm --create --verbose /dev/md127 --level=5  --raid-devices=4 /dev/sdf /dev/sdg /dev/sdh /dev/sdi
+ccbrc@gag:~$ sudo mdadm --create --assume-clean --verbose /dev/md127 --level=5  --raid-devices=4 /dev/sdf /dev/sdg /dev/sdh /dev/sdi    
+[sudo] password for ccbrc: 
+mdadm: layout defaults to left-symmetric
+mdadm: layout defaults to left-symmetric
+mdadm: chunk size defaults to 512K
+mdadm: partition table exists on /dev/sdg
+mdadm: partition table exists on /dev/sdg but will be lost or
+       meaningless after creating array
+mdadm: partition table exists on /dev/sdh
+mdadm: partition table exists on /dev/sdh but will be lost or
+       meaningless after creating array
+mdadm: size set to 13672250368K
+mdadm: automatically enabling write-intent bitmap on large array
+Continue creating array? yes
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md127 started.
 ```
-7. Attempt to mount read-only
+Now check mdstat:
+```
+ccbrc@gag:~$ cat /proc/mdstat 
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
+md127 : active raid5 sdi[3] sdh[2] sdg[1] sdf[0]
+      41016751104 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+      bitmap: 102/102 pages [408KB], 65536KB chunk
 
+md0 : active raid5 sda1[0] sdc1[3] sdb1[1]
+      31251490816 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+      bitmap: 0/117 pages [0KB], 65536KB chunk
+
+unused devices: <none>
 ```
-mount -o ro -t xfs /dev/md127 /data
+Whoa! Did you expect it?
+
+7. Attempt to mount read-only
 ```
+ccbrc@gag:~$ sudo mount -o ro -t xfs /dev/md127 /data
+ccbrc@gag:~$ cd /data/
+ccbrc@gag:/data$ ls
+
+THIS IS INDEED YOUR DATA, AND NOW YOU CAN BACK IT UP AND GO FOR RUNNING! Note that you are supposed to create RAID `correctly` once again on these drives in order to make it work upon reboot.
+```
+
+### Acknowledgement
+Thanks to Ken and Gabe from the Mississippi Center of Supercomputing for showing how to delete partition tables. 
