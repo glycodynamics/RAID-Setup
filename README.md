@@ -782,8 +782,12 @@ sk1@gag:~$ sudo mount -o ro -t xfs /dev/md127 /data
 sk1@gag:~$ cd /data/
 sk1@gag:/data$ ls
 
-THIS IS INDEED YOUR DATA, AND NOW YOU CAN BACK IT UP AND GO FOR RUNNING! Note that you are supposed to create RAID `correctly` once again on these drives in order to make it work upon reboot.
+THIS IS INDEED YOUR DATA, AND NOW YOU CAN BACK IT UP AND GO FOR RUNNING! Note that you are supposed to create RAID `correctly` again on these drives to make it work upon reboot.
 ```
 
 ### Acknowledgement
 Thanks to Ken and Gabe from the Mississippi Center of Supercomputing for showing how to delete partition tables. 
+
+Other resources:
+https://raid.wiki.kernel.org/index.php/RAID_setup
+
