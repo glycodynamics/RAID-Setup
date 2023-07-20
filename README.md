@@ -16,7 +16,7 @@ here are mainly 5 steps involved in setting up the RAID:
 Use ```lsblk``` to list blocks and print the number of drives and how they have been installed. Make sure that disks sda, sdb, and sdc are connected to the machine and recognized by the operating system.
 
 ```
-sushil@gag:~$ lsblk 
+sk1@gag:~$ lsblk 
 NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
 sda      8:0    0  14.6T  0 disk 
 sdb      8:16   0  14.6T  0 disk 
@@ -50,7 +50,7 @@ Within the parted utility, run the following commands:
 -  Repeat steps 3-4 for disks sdb and sdc, replacing /dev/sda with /dev/sdb and /dev/sdc, respectively.You can also use select /dev/sdb in parted to start doing operations on /dev/sdb without quitting parted after setting up dev/sda.
 
 ```
-ccbrc@gag:/home/sushil$ sudo parted /dev/sda
+sk1@gag:/home/sk1$ sudo parted /dev/sda
 GNU Parted 3.3
 Using /dev/sda
 Welcome to GNU Parted! Type 'help' to view a list of commands.
@@ -99,7 +99,7 @@ This command creates a RAID 5 array called /dev/md0 using disks sda, sdb, and sd
 At this point, disks will be totally crazy and start working at full capacity to reconstruct your array. Have a look in /proc/mdstat to see what's going on.
 
 ```
-ccbrc@gag:/home/sushil$ cat /proc/mdstat 
+sk1@gag:/home/sk1$ cat /proc/mdstat 
 Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
 md0 : active raid5 sdc1[3] sdb1[1] sda1[0]
       31251490816 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [UU_]
@@ -110,7 +110,7 @@ md0 : active raid5 sdc1[3] sdb1[1] sda1[0]
 unused devices: <none>
 
 ## After about 18 hours:
-ccbrc@gag:/home/sushil$ cat /proc/mdstat 
+sk1@gag:/home/sk1$ cat /proc/mdstat 
 Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
 md0 : active raid5 sdc1[3] sdb1[1] sda1[0]
       31251490816 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [UU_]
@@ -123,7 +123,7 @@ unused devices: <none>
 
 ```
 ### After 30 hours:
-ccbrc@gag:/$ cat /proc/mdstat 
+sk1@gag:/$ cat /proc/mdstat 
 Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
 md0 : active raid5 sdc1[3] sdb1[1] sda1[0]
       31251490816 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
@@ -140,7 +140,7 @@ During the process of setting up RAID, one crucial aspect often overlooked is th
 #### 4. Verifying the Changes
 Verify which disks are involved in RAID:
 ```
-ccbrc@gag:/home/sushil$ lsblk -o NAME,UUID,MOUNTPOINT
+sk1@gag:/home/sk1$ lsblk -o NAME,UUID,MOUNTPOINT
 NAME    UUID                                 MOUNTPOINT
 sda                                          
 └─sda1  345d1e57-859a-84ab-5aa7-e5ee062c3828 
@@ -162,7 +162,7 @@ sde
 Have a look in /proc/mdstat. You should see that the array is ready, and running. It will show one U for each drive, UUU in our case here.
 #### 5. Create an XFS Filesystem
 ```
-ccbrc@gag:$ sudo mkfs.xfs /dev/md0
+sk1@gag:$ sudo mkfs.xfs /dev/md0
 meta-data=/dev/md0               isize=512    agcount=32, agsize=244152192 blks
          =                       sectsz=4096  attr=2, projid32bit=1
          =                       crc=1        finobt=1, sparse=1, rmapbt=0
@@ -180,8 +180,8 @@ If the information is incorrect, specify stripe geometry manually with the su an
 After the array is ready, it is important to save the configuration in the proper mdadm configuration file. In Ubuntu, this is file /etc/mdadm/mdadm.conf. In some other distributions, this is file can be in /etc/mdadm.conf. Check your distribution's documentation, or look at man mdadm.conf, to see what applies to your distribution.
 
 ```
-ccbrc@gag:/home/sushil$ sudo mdadm --detail --scan
-[sudo] password for ccbrc: 
+sk1@gag:/home/sk1$ sudo mdadm --detail --scan
+[sudo] password for sk1: 
 ARRAY /dev/md0 metadata=1.2 spares=1 name=gag.olemiss.edu:0 UUID=345d1e57:859a84ab:5aa7e5ee:062c3828
 
 
@@ -194,7 +194,7 @@ mdadm --detail --scan >> /etc/mdadm/mdadm.conf
 #### 7. Mount the filesystem
 
 Check the UUID of md0 attay:
-ccbrc@gag:/scratch$ lsblk -o NAME,UUID
+sk1@gag:/scratch$ lsblk -o NAME,UUID
 NAME    UUID                                 MOUNTPOINT
 sda                                          
 └─sda1  345d1e57-859a-84ab-5aa7-e5ee062c3828 
@@ -212,9 +212,9 @@ put the raid array UUID and mount point in /etc/fstab:
 UUID=4b857035-2469-4ba9-9c83-960125cd75ed /scratch                 xfs     defaults,usrquota,grpquota        1 2
 
 #Then do:
-ccbrc@gag:~$ sudo mount /scratch
+sk1@gag:~$ sudo mount /scratch
 
-ccbrc@gag:~$ sudo df -H
+sk1@gag:~$ sudo df -H
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/md0         32T  224G   32T   1% /scratch
 ```
@@ -230,13 +230,13 @@ All set! The usrquota,grpquota keywords are needed only when you want to enable 
 Stopping a running RAID device is easy:
 
 ```
-ccbrc@gag:~$ sudo mdadm --stop /dev/md0
+sk1@gag:~$ sudo mdadm --stop /dev/md0
 mdadm: stopped /dev/md0
 ```
 Running is complicated and ```mdadm --run /dev/md0``` will NOT work. Do instead:
 
 ```
-ccbrc@gag:~$ sudo mdadm --assemble --scan 
+sk1@gag:~$ sudo mdadm --assemble --scan 
 mdadm: /dev/md0 has been started with 3 drives.
 
 or
@@ -255,14 +255,14 @@ Here we are going to cover a situation where we had RAID 5 set up on 4x 14TB HDD
 - Check ``lsblk``` and mdstat
 
 ```
-ccbrc@gag:/home/sushil$ cat /proc/mdstat
+sk1@gag:/home/sk1$ cat /proc/mdstat
 Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
 md127 : inactive sdg[1](S) sdh[2](S)
       27344500736 blocks super 1.2
        
 unused devices: <none>
 
-ccbrc@gag:/home/sushil$ sudo lsblk 
+sk1@gag:/home/sk1$ sudo lsblk 
 NAME    MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
 sde       8:64   0   3.7T  0 disk  
 ├─sde1    8:65   0     1M  0 part  
@@ -281,7 +281,7 @@ We had sd[f-i] in RAID 5, but something went wrong, and we can no longer access 
 
 
 ```
-ccbrc@gag:/home/sushil$ sudo  sg_map -x
+sk1@gag:/home/sk1$ sudo  sg_map -x
 /dev/sg0  0 0 0 0  0  /dev/sda
 /dev/sg1  1 0 0 0  0  /dev/sdb
 /dev/sg2  2 0 0 0  0  /dev/sdc
@@ -292,7 +292,7 @@ ccbrc@gag:/home/sushil$ sudo  sg_map -x
 /dev/sg7  9 0 0 0  0  /dev/sdh
 /dev/sg8  10 0 0 0  0  /dev/sdi
 
-ccbrc@gag:/home/sushil$ sudo cat /etc/mdadm/mdadm.conf 
+sk1@gag:/home/sk1$ sudo cat /etc/mdadm/mdadm.conf 
 # mdadm.conf
 #
 # !NB! Run update-initramfs -u after updating this file.
@@ -323,7 +323,7 @@ MAILADDR root
 Check each disk now:
 
 ```
-ccbrc@gag:/home/sushil$ sudo fdisk -l /dev/sdf
+sk1@gag:/home/sk1$ sudo fdisk -l /dev/sdf
 Disk /dev/sdf: 12.75 TiB, 14000519643136 bytes, 27344764928 sectors
 Disk model: WDC  WUH721414AL
 Units: sectors of 1 * 512 = 512 bytes
@@ -336,7 +336,7 @@ Device     Start         End     Sectors  Size Type
 /dev/sdf1   2048 27344762879 27344760832 12.8T Linux filesystem
 
 
-ccbrc@gag:/home/sushil$ sudo fdisk -l /dev/sdg
+sk1@gag:/home/sk1$ sudo fdisk -l /dev/sdg
 Disk /dev/sdg: 12.75 TiB, 14000519643136 bytes, 27344764928 sectors
 Disk model: WDC  WUH721414AL
 Units: sectors of 1 * 512 = 512 bytes
@@ -351,7 +351,7 @@ Device     Boot Start        End    Sectors Size Id Type
 Partition 1 does not start on physical sector boundary.
 
 
-ccbrc@gag:/home/sushil$ sudo fdisk -l /dev/sdh
+sk1@gag:/home/sk1$ sudo fdisk -l /dev/sdh
 Disk /dev/sdh: 12.75 TiB, 14000519643136 bytes, 27344764928 sectors
 Disk model: WDC  WUH721414AL
 Units: sectors of 1 * 512 = 512 bytes
@@ -366,7 +366,7 @@ Device     Boot Start        End    Sectors Size Id Type
 Partition 1 does not start on physical sector boundary.
 
 
-ccbrc@gag:/home/sushil$ sudo fdisk -l /dev/sdi
+sk1@gag:/home/sk1$ sudo fdisk -l /dev/sdi
 Disk /dev/sdi: 12.75 TiB, 14000519643136 bytes, 27344764928 sectors
 Disk model: WDC  WUH721414AL
 Units: sectors of 1 * 512 = 512 bytes
@@ -381,10 +381,10 @@ Device     Start         End     Sectors  Size Type
 
 Check md127 status using 'mdadm' 
 ```
-ccbrc@gag:/home/sushil$ sudo mdadm --query /dev/md127
+sk1@gag:/home/sk1$ sudo mdadm --query /dev/md127
 /dev/md127:  (null) 0 devices, 2 spares. Use mdadm --detail for more detail.
 
-ccbrc@gag:/home/sushil$ sudo mdadm --detail /dev/md127
+sk1@gag:/home/sk1$ sudo mdadm --detail /dev/md127
 /dev/md127:
            Version : 1.2
         Raid Level : raid0
@@ -394,7 +394,7 @@ ccbrc@gag:/home/sushil$ sudo mdadm --detail /dev/md127
              State : inactive
    Working Devices : 2
 
-              Name : ccbrc.olemiss.edu:100
+              Name : user.domain.com:100
               UUID : f9883684:3b9d073e:ef83584f:911f6a4b
             Events : 122729
 
@@ -404,21 +404,24 @@ ccbrc@gag:/home/sushil$ sudo mdadm --detail /dev/md127
        -       8       96        -        /dev/sdg
 
 ```
-Now its clear that sdf and adi are for some reason not part of md127 anymore and strangely it shows Raule level raid0 while it was actually raid5. I think RAID is just guessing raid0 here as having only two disks as part of the raid array. 
+Now it's clear that sdf and adi are, for some reason, not part of md127 anymore, and strangely, it shows raid0 while it was actually raid5. I think RAID is just guessing raid0 here, as there are only two disks as part of the raid array. 
 
 Now examine all four disks:
 ```
-ccbrc@gag:/home/sushil$ sudo mdadm --examine /dev/sdf
+sk1@gag:/home/sk1$ sudo mdadm --examine /dev/sdf
 /dev/sdf:
    MBR Magic : aa55
 Partition[0] :   4294967295 sectors at            1 (type ee)
-ccbrc@gag:/home/sushil$ sudo mdadm --examine /dev/sdg
+
+
+
+sk1@gag:/home/sk1$ sudo mdadm --examine /dev/sdg
 /dev/sdg:
           Magic : a92b4efc
         Version : 1.2
     Feature Map : 0x1
      Array UUID : f9883684:3b9d073e:ef83584f:911f6a4b
-           Name : ccbrc.olemiss.edu:100
+           Name : user.domain.com:100
   Creation Time : Tue May 24 11:37:00 2022
      Raid Level : raid5
    Raid Devices : 4
@@ -442,13 +445,16 @@ Internal Bitmap : 8 sectors from superblock
 
    Device Role : Active device 1
    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-ccbrc@gag:/home/sushil$ sudo mdadm --examine /dev/sdh
+
+
+
+sk1@gag:/home/sk1$ sudo mdadm --examine /dev/sdh
 /dev/sdh:
           Magic : a92b4efc
         Version : 1.2
     Feature Map : 0x1
      Array UUID : f9883684:3b9d073e:ef83584f:911f6a4b
-           Name : ccbrc.olemiss.edu:100
+           Name : user.domain.com:100
   Creation Time : Tue May 24 11:37:00 2022
      Raid Level : raid5
    Raid Devices : 4
@@ -472,7 +478,9 @@ Internal Bitmap : 8 sectors from superblock
 
    Device Role : Active device 2
    Array State : AAAA ('A' == active, '.' == missing, 'R' == replacing)
-ccbrc@gag:/home/sushil$ sudo mdadm --examine /dev/sdi
+
+
+sk1@gag:/home/sk1$ sudo mdadm --examine /dev/sdi
 /dev/sdi:
    MBR Magic : aa55
 Partition[0] :   4294967295 sectors at            1 (type ee)
@@ -487,7 +495,7 @@ Now it's clear that It looks like the partition table was changed on sdf and sdi
 
 2. Check the current state: lsblk --fs
 ```
-ccbrc@gag:/home/sushil$ lsblk --fs
+sk1@gag:/home/sk1$ lsblk --fs
 NAME    FSTYPE            LABEL                 UUID                                 FSAVAIL FSUSE% MOUNTPOINT
 sde                                                                                                 
 ├─sde1                                                                                              
@@ -496,8 +504,8 @@ sde
 └─sde4  ext4                                    72c80aee-79b6-4070-8f0b-2eef4421ff0c    2.8T    16% /
 sdf                                                                                                 
 └─sdf1                                                                                              
-sdg     linux_raid_member ccbrc.olemiss.edu:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
-sdh     linux_raid_member ccbrc.olemiss.edu:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
+sdg     linux_raid_member user.domain.com:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
+sdh     linux_raid_member user.domain.com:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
 sdi                                                                                                 
 └─sdi1                                                                                    
    ```
@@ -505,32 +513,32 @@ sdi
 
 Also, possibly check cat /proc/partitions
 
-3. Clear gpt label and partition on sdf and sdi:
+3. Clear GPT label and partition on sdf and sdi:
 
 ```
-ccbrc@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdf bs=512 count=34
-[sudo] password for ccbrc: 
+sk1@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdf bs=512 count=34
+[sudo] password for sk1: 
 34+0 records in
 34+0 records out
 17408 bytes (17 kB, 17 KiB) copied, 1.00613 s, 17.3 kB/s
 
 
-ccbrc@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdi bs=512 count=34
+sk1@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdi bs=512 count=34
 34+0 records in
 34+0 records out
 17408 bytes (17 kB, 17 KiB) copied, 1.02758 s, 16.9 kB/s
 
-ccbrc@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdf bs=512 count=34 seek=$((`sudo blockdev --getsz /dev/sdf` - 34))
+sk1@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdf bs=512 count=34 seek=$((`sudo blockdev --getsz /dev/sdf` - 34))
 34+0 records in
 34+0 records out
 17408 bytes (17 kB, 17 KiB) copied, 0.00206208 s, 8.4 MB/s
 
-ccbrc@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdi bs=512 count=34 seek=$((`sudo blockdev --getsz /dev/sdi` - 34))
+sk1@gag:/scratch$ sudo dd if=/dev/zero of=/dev/sdi bs=512 count=34 seek=$((`sudo blockdev --getsz /dev/sdi` - 34))
 34+0 records in
 34+0 records out
 17408 bytes (17 kB, 17 KiB) copied, 0.00205267 s, 8.5 MB/s
 
-ccbrc@gag:/scratch$ lsblk --fs
+sk1@gag:/scratch$ lsblk --fs
 NAME    FSTYPE            LABEL                 UUID                                 FSAVAIL FSUSE% MOUNTPOINT
 loop0   squashfs                                                                           0   100% /snap/bare/5
 loop1   squashfs                                                                           0   100% /snap/chromium/2497
@@ -569,16 +577,16 @@ sde
 ├─sde3  swap                                    af84dd67-c733-4e45-a2b3-df63a5a83ede                [SWAP]
 └─sde4  ext4                                    72c80aee-79b6-4070-8f0b-2eef4421ff0c    2.8T    16% /
 sdf                                                                                                 
-sdg     linux_raid_member ccbrc.olemiss.edu:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
-sdh     linux_raid_member ccbrc.olemiss.edu:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
+sdg     linux_raid_member user.domain.com:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
+sdh     linux_raid_member user.domain.com:100 f9883684-3b9d-073e-ef83-584f911f6a4b                
 sdi                                                                                                 
 
 
-ccbrc@gag:/scratch$ sudo mdadm -S /dev/md127
+sk1@gag:/scratch$ sudo mdadm -S /dev/md127
 mdadm: stopped /dev/md127
 
 
-ccbrc@gag:/scratch$ lsblk --fs
+sk1@gag:/scratch$ lsblk --fs
 NAME    FSTYPE            LABEL             UUID                                 FSAVAIL FSUSE% MOUNTPOINT
 loop0   squashfs                                                                       0   100% /snap/bare/5
 loop1   squashfs                                                                       0   100% /snap/chromium/2497
@@ -622,7 +630,7 @@ sdh
 sdi                                                                                       
 
 
-ccbrc@gag:/scratch$ sudo mdadm --create --verbose /dev/md127 --level=5  --raid-devices=4 /dev/sdf /dev/sdg /dev/sdh /dev/sdi
+sk1@gag:/scratch$ sudo mdadm --create --verbose /dev/md127 --level=5  --raid-devices=4 /dev/sdf /dev/sdg /dev/sdh /dev/sdi
 mdadm: layout defaults to left-symmetric
 mdadm: layout defaults to left-symmetric
 mdadm: chunk size defaults to 512K
@@ -656,8 +664,8 @@ mdadm --zero-superblock /dev/sdh
 6. Create with same structure using whole disk
 
 ```
-ccbrc@gag:~$ sudo mdadm --create --assume-clean --verbose /dev/md127 --level=5  --raid-devices=4 /dev/sdf /dev/sdg /dev/sdh /dev/sdi    
-[sudo] password for ccbrc: 
+sk1@gag:~$ sudo mdadm --create --assume-clean --verbose /dev/md127 --level=5  --raid-devices=4 /dev/sdf /dev/sdg /dev/sdh /dev/sdi    
+[sudo] password for sk1: 
 mdadm: layout defaults to left-symmetric
 mdadm: layout defaults to left-symmetric
 mdadm: chunk size defaults to 512K
@@ -675,7 +683,7 @@ mdadm: array /dev/md127 started.
 ```
 Now check mdstat:
 ```
-ccbrc@gag:~$ cat /proc/mdstat 
+sk1@gag:~$ cat /proc/mdstat 
 Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4] [raid10] 
 md127 : active raid5 sdi[3] sdh[2] sdg[1] sdf[0]
       41016751104 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
@@ -687,13 +695,92 @@ md0 : active raid5 sda1[0] sdc1[3] sdb1[1]
 
 unused devices: <none>
 ```
+looks good :)
+
+```
+sk1@gag:/home/sk1$ sudo mdadm --query /dev/md127
+[sudo] password for sk1:
+/dev/md127:  raid5 4 devices, 0 spares. Use mdadm --detail for more detail.
+sk1@gag:/home/sk1$ sudo mdadm --detail /dev/md127
+/dev/md127:
+           Version : 1.2
+     Creation Time : Tue May 24 11:37:00 2022
+        Raid Level : raid5
+     Used Dev Size : 18446744073709551615
+      Raid Devices : 4
+     Total Devices : 2
+       Persistence : Superblock is persistent
+
+       Update Time : Tue Jul  4 08:29:36 2023
+             State : active, FAILED, Not Started
+    Active Devices : 2
+   Working Devices : 2
+    Failed Devices : 0
+     Spare Devices : 0
+
+            Layout : left-symmetric
+        Chunk Size : 512K
+
+Consistency Policy : unknown
+
+              Name : user.domain.com:100
+              UUID : f9883684:3b9d073e:ef83584f:911f6a4b
+            Events : 122729
+
+    Number   Major   Minor   RaidDevice State
+       -       0        0        0      removed
+       -       0        0        1      removed
+       -       0        0        2      removed
+       -       0        0        3      removed
+
+       -       8       32        1      sync   /dev/sdc
+       -       8       48        2      sync   /dev/sdd
+
+
+
+sk1@gag:~$ sudo mdadm --detail /dev/md127
+/dev/md127:
+           Version : 1.2
+     Creation Time : Wed Jul 19 15:28:41 2023
+        Raid Level : raid5
+        Array Size : 41016751104 (39116.62 GiB 42001.15 GB)
+     Used Dev Size : 13672250368 (13038.87 GiB 14000.38 GB)
+      Raid Devices : 4
+     Total Devices : 4
+       Persistence : Superblock is persistent
+
+     Intent Bitmap : Internal
+
+       Update Time : Wed Jul 19 15:29:39 2023
+             State : clean 
+    Active Devices : 4
+   Working Devices : 4
+    Failed Devices : 0
+     Spare Devices : 0
+
+            Layout : left-symmetric
+        Chunk Size : 512K
+
+Consistency Policy : bitmap
+
+              Name : gag.olemiss.edu:127  (local to host gag.olemiss.edu)
+              UUID : 8dec2ecc:e24c1a04:e2e682e6:cfcfdf5e
+            Events : 2
+
+    Number   Major   Minor   RaidDevice State
+       0       8       80        0      active sync   /dev/sdf
+       1       8       96        1      active sync   /dev/sdg
+       2       8      112        2      active sync   /dev/sdh
+       3       8      128        3      active sync   /dev/sdi
+
+```
 Whoa! Did you expect it?
 
 7. Attempt to mount read-only
 ```
-ccbrc@gag:~$ sudo mount -o ro -t xfs /dev/md127 /data
-ccbrc@gag:~$ cd /data/
-ccbrc@gag:/data$ ls
+sk1@gag:~$ sudo mount -o ro -t xfs /dev/md127 /data
+sk1@gag:~$ cd /data/
+sk1@gag:/data$ ls
 
 THIS IS INDEED YOUR DATA, AND NOW YOU CAN BACK IT UP AND GO FOR RUNNING! Note that you are supposed to create RAID `correctly` once again on these drives in order to make it work upon reboot.
 ```
